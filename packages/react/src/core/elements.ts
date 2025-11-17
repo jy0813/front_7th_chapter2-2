@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { isEmptyValue } from "../utils";
+import { isEmptyValue, isVNode } from "../utils";
 import { VNode } from "./types";
 import { Fragment, TEXT_ELEMENT } from "./constants";
 
@@ -9,15 +9,34 @@ import { Fragment, TEXT_ELEMENT } from "./constants";
  */
 export const normalizeNode = (node: VNode): VNode | null => {
   // 여기를 구현하세요.
+  // 렌더러가 이해할 수 없는 값 제거 함수 호출
+  if (isEmptyValue(node)) return null;
+  // 원시 값(string, number)을 VNode로 변환
+  // createTextElement 호출해야함.
+  if (typeof node === "string" || typeof node === "number") {
+    return createTextElement(node);
+  }
+  // 이미 VNode인 경우 그대로 반환
+  if (isVNode(node)) {
+    return node;
+  }
   return null;
 };
 
 /**
  * 텍스트 노드를 위한 VNode를 생성합니다.
  */
-const createTextElement = (node: VNode): VNode => {
+// 매개변수 타입 불일치 수정 => VNode 를 string | number 로 변경
+const createTextElement = (node: string | number): VNode => {
   // 여기를 구현하세요.
-  return {} as VNode;
+  return {
+    type: TEXT_ELEMENT,
+    key: null,
+    props: {
+      nodeValue: String(node),
+      children: [],
+    },
+  };
 };
 
 /**
@@ -30,6 +49,25 @@ export const createElement = (
   ...rawChildren: any[]
 ) => {
   // 여기를 구현하세요.
+  // 1. props와 key 분리
+  const { key = null, ...restProps } = originProps || {};
+  const props: Record<string, any> = { ...restProps };
+
+  // 2. children 평탄화
+  const flatChildren = rawChildren.flat(Infinity);
+  const children: VNode[] = [];
+
+  // 3. children 정규화
+  for (const child of flatChildren) {
+    const normalized = normalizeNode(child);
+    if (normalized) children.push(normalized);
+  }
+
+  // 4. children이 있으면 추가
+  if (children.length) props.children = children;
+
+  // 5. VNode 반환
+  return { type, key, props };
 };
 
 /**
@@ -44,5 +82,31 @@ export const createChildPath = (
   siblings?: VNode[],
 ): string => {
   // 여기를 구현하세요.
-  return "";
+  let childId: string;
+
+  // Key 우선 (중복 검사)
+  if (key !== null && key !== "") {
+    const isDuplicate = siblings?.some((s, i) => i < index && s.key === key);
+    childId = isDuplicate ? String(index) : key;
+  }
+  // NodeType 기반 인덱싱
+  else if (nodeType && siblings) {
+    // 같은 타입의 형제 중 몇 번째인지
+    const sameTypeIndex = siblings.slice(0, index).filter((s) => s.type === nodeType).length;
+
+    // 타입 접두사 생성
+    let prefix = "";
+    if (nodeType === Fragment) prefix = "f";
+    else if (nodeType === TEXT_ELEMENT) prefix = "t";
+    else if (typeof nodeType === "string") prefix = "h";
+    else prefix = "c";
+
+    childId = `${prefix}:${sameTypeIndex}`;
+  }
+  // 폴백: 단순 index
+  else {
+    childId = String(index);
+  }
+
+  return parentPath ? `${parentPath}/${childId}` : childId;
 };
