@@ -16,4 +16,10 @@ export const setup = (rootNode: VNode | null, container: HTMLElement): void => {
   // 2. 이전 렌더링 내용을 정리하고 컨테이너를 비웁니다.
   // 3. 루트 컨텍스트와 훅 컨텍스트를 리셋합니다.
   // 4. 첫 렌더링을 실행합니다.
+
+  console.log(context, removeInstance, cleanupUnusedHooks, render);
+
+  if (!(container instanceof HTMLElement)) {
+    throw new Error("유효한 HTML 요소가 아닙니다.");
+  }
 };

@@ -8,6 +8,22 @@ import { Instance } from "./types";
  */
 export const setDomProps = (dom: HTMLElement, props: Record<string, any>): void => {
   // 여기를 구현하세요.
+
+  console.log(NodeTypes);
+
+  const test: NodeType = NodeTypes.HOST;
+
+  console.log(test);
+  for (const [key, value] of Object.entries(props)) {
+    if (key.startsWith("on") && typeof value === "function") {
+      const eventName = key.slice(2).toLowerCase();
+      dom.addEventListener(eventName, value);
+    }
+
+    if (key === "className") {
+      dom.className = value ?? "";
+    }
+  }
 };
 
 /**
@@ -20,6 +36,7 @@ export const updateDomProps = (
   nextProps: Record<string, any> = {},
 ): void => {
   // 여기를 구현하세요.
+  console.log(prevProps, nextProps);
 };
 
 /**
@@ -28,6 +45,7 @@ export const updateDomProps = (
  */
 export const getDomNodes = (instance: Instance | null): (HTMLElement | Text)[] => {
   // 여기를 구현하세요.
+  console.log(instance);
   return [];
 };
 
@@ -36,6 +54,7 @@ export const getDomNodes = (instance: Instance | null): (HTMLElement | Text)[] =
  */
 export const getFirstDom = (instance: Instance | null): HTMLElement | Text | null => {
   // 여기를 구현하세요.
+  console.log(instance);
   return null;
 };
 
@@ -44,6 +63,7 @@ export const getFirstDom = (instance: Instance | null): HTMLElement | Text | nul
  */
 export const getFirstDomFromChildren = (children: (Instance | null)[]): HTMLElement | Text | null => {
   // 여기를 구현하세요.
+  console.log(children);
   return null;
 };
 
@@ -57,6 +77,8 @@ export const insertInstance = (
   anchor: HTMLElement | Text | null = null,
 ): void => {
   // 여기를 구현하세요.
+
+  console.log(parentDom, instance, anchor);
 };
 
 /**
@@ -64,4 +86,5 @@ export const insertInstance = (
  */
 export const removeInstance = (parentDom: HTMLElement, instance: Instance | null): void => {
   // 여기를 구현하세요.
+  console.log(parentDom, instance);
 };
