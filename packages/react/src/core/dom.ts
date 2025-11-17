@@ -226,10 +226,16 @@ export const updateDomProps = (
  */
 export const getDomNodes = (instance: Instance | null): (HTMLElement | Text)[] => {
   // 여기를 구현하세요.
+  // null 체크
+  if (!instance) return [];
 
-  console.log(instance);
+  // 종료 조건: dom이 있으면 반환
+  if (instance.dom) {
+    return [instance.dom];
+  }
 
-  return [];
+  // 재귀적으로 자식 인스턴스들에서 DOM 노드 수집
+  return instance.children.flatMap(getDomNodes);
 };
 
 /**
@@ -237,7 +243,21 @@ export const getDomNodes = (instance: Instance | null): (HTMLElement | Text)[] =
  */
 export const getFirstDom = (instance: Instance | null): HTMLElement | Text | null => {
   // 여기를 구현하세요.
-  console.log(instance);
+  // null 체크: instance가 null이면 null 반환
+  if (!instance) return null;
+
+  // 종료 조건: 현재 인스턴스가 실제 DOM을 가지고 있으면 반환
+  // HOST나 TEXT 노드는 자신의 dom을 가짐
+  if (instance.dom) return instance.dom;
+
+  // 재귀 탐색: children을 순회하며 첫 번째 DOM 노드를 찾음
+  // COMPONENT나 FRAGMENT는 dom이 없으므로 children을 탐색해야 함
+  for (const child of instance.children) {
+    const dom = getFirstDom(child);
+    if (dom) return dom; // 첫 번째를 찾으면 즉시 반환 (early return)
+  }
+
+  // 모든 children을 확인했지만 DOM을 찾지 못한 경우
   return null;
 };
 
@@ -246,7 +266,13 @@ export const getFirstDom = (instance: Instance | null): HTMLElement | Text | nul
  */
 export const getFirstDomFromChildren = (children: (Instance | null)[]): HTMLElement | Text | null => {
   // 여기를 구현하세요.
-  console.log(children);
+  // children 배열을 순회하며 첫 번째 DOM 찾기
+  for (const child of children) {
+    const dom = getFirstDom(child);
+    if (dom) return dom; // 첫 번째 DOM을 찾으면 즉시 반환
+  }
+
+  // 모든 children을 확인했지만 DOM을 찾지 못함
   return null;
 };
 
@@ -260,8 +286,21 @@ export const insertInstance = (
   anchor: HTMLElement | Text | null = null,
 ): void => {
   // 여기를 구현하세요.
+  // null 체크
+  if (!instance) return;
 
-  console.log(parentDom, instance, anchor);
+  // instance에서 모든 DOM 노드들을 가져옴
+  const domNodes = getDomNodes(instance);
+
+  // 각 DOM 노드를 부모에 삽입
+  for (const dom of domNodes) {
+    // anchor가 있으면 그 앞에 삽입, 없으면 마지막에 추가
+    if (anchor) {
+      parentDom.insertBefore(dom, anchor);
+    } else {
+      parentDom.appendChild(dom);
+    }
+  }
 };
 
 /**
@@ -269,5 +308,14 @@ export const insertInstance = (
  */
 export const removeInstance = (parentDom: HTMLElement, instance: Instance | null): void => {
   // 여기를 구현하세요.
-  console.log(parentDom, instance);
+  // null 체크
+  if (!instance) return;
+
+  // instance에서 모든 DOM 노드들을 가져옴
+  const domNodes = getDomNodes(instance);
+
+  // 각 DOM 노드를 부모에서 제거
+  for (const dom of domNodes) {
+    parentDom.removeChild(dom);
+  }
 };
