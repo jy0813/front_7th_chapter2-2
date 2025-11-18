@@ -35,7 +35,7 @@ export interface RootContext {
   node: VNode | null;
   instance: Instance | null;
 
-  reset(options: { container: HTMLElement; node: VNode }): void;
+  reset(options: { container: HTMLElement; node: VNode | null }): void;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
