@@ -99,9 +99,13 @@ export const createChildPath = (
     if (nodeType === Fragment) prefix = "f";
     else if (nodeType === TEXT_ELEMENT) prefix = "t";
     else if (typeof nodeType === "string") prefix = "h";
-    else prefix = "c";
+    else if (typeof nodeType === "function") {
+      // 함수 컴포넌트의 경우 함수 이름 포함하여 구분
+      const functionName = nodeType.name || "anonymous";
+      prefix = `c${functionName}`;
+    } else prefix = "c";
 
-    childId = `${prefix}:${sameTypeIndex}`;
+    childId = `${prefix}_${sameTypeIndex}`;
   }
   // 폴백: 단순 index
   else {
