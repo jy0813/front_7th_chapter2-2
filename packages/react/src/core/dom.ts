@@ -1,12 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { NodeType, NodeTypes } from "./constants";
+import { NodeTypes } from "./constants";
 import { Instance } from "./types";
-
-console.log(NodeTypes);
-
-const test: NodeType = NodeTypes.HOST;
-
-console.log(test);
 
 /**
  * DOM 요소에 속성(props)을 설정합니다.
@@ -225,16 +219,15 @@ export const updateDomProps = (
  * Fragment나 컴포넌트 인스턴스는 여러 개의 DOM 노드를 가질 수 있습니다.
  */
 export const getDomNodes = (instance: Instance | null): (HTMLElement | Text)[] => {
-  // 여기를 구현하세요.
   // null 체크
   if (!instance) return [];
 
-  // 종료 조건: dom이 있으면 반환
-  if (instance.dom) {
-    return [instance.dom];
+  // HOST나 TEXT 노드는 실제 DOM을 가지므로 즉시 반환
+  if (instance.kind === NodeTypes.HOST || instance.kind === NodeTypes.TEXT) {
+    return instance.dom ? [instance.dom] : [];
   }
 
-  // 재귀적으로 자식 인스턴스들에서 DOM 노드 수집
+  // COMPONENT나 FRAGMENT는 dom이 없으므로 children을 재귀 탐색
   return instance.children.flatMap(getDomNodes);
 };
 
@@ -242,22 +235,20 @@ export const getDomNodes = (instance: Instance | null): (HTMLElement | Text)[] =
  * 주어진 인스턴스에서 첫 번째 실제 DOM 노드를 찾습니다.
  */
 export const getFirstDom = (instance: Instance | null): HTMLElement | Text | null => {
-  // 여기를 구현하세요.
-  // null 체크: instance가 null이면 null 반환
+  // null 체크
   if (!instance) return null;
 
-  // 종료 조건: 현재 인스턴스가 실제 DOM을 가지고 있으면 반환
-  // HOST나 TEXT 노드는 자신의 dom을 가짐
-  if (instance.dom) return instance.dom;
-
-  // 재귀 탐색: children을 순회하며 첫 번째 DOM 노드를 찾음
-  // COMPONENT나 FRAGMENT는 dom이 없으므로 children을 탐색해야 함
-  for (const child of instance.children) {
-    const dom = getFirstDom(child);
-    if (dom) return dom; // 첫 번째를 찾으면 즉시 반환 (early return)
+  // HOST나 TEXT 노드는 실제 DOM을 가지므로 즉시 반환
+  if (instance.kind === NodeTypes.HOST || instance.kind === NodeTypes.TEXT) {
+    return instance.dom;
   }
 
-  // 모든 children을 확인했지만 DOM을 찾지 못한 경우
+  // COMPONENT나 FRAGMENT는 dom이 없으므로 children을 재귀 탐색
+  for (const child of instance.children) {
+    const dom = getFirstDom(child);
+    if (dom) return dom; // 첫 번째를 찾으면 즉시 반환
+  }
+
   return null;
 };
 
@@ -314,8 +305,11 @@ export const removeInstance = (parentDom: HTMLElement, instance: Instance | null
   // instance에서 모든 DOM 노드들을 가져옴
   const domNodes = getDomNodes(instance);
 
-  // 각 DOM 노드를 부모에서 제거
+  // 각 DOM 노드를 실제 부모에서 제거
   for (const dom of domNodes) {
-    parentDom.removeChild(dom);
+    // dom의 실제 부모가 있으면 그곳에서 제거
+    if (dom.parentNode) {
+      dom.parentNode.removeChild(dom);
+    }
   }
 };
