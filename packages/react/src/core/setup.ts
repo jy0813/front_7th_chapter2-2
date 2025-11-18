@@ -1,7 +1,6 @@
 import { context } from "./context";
 import { VNode } from "./types";
 import { removeInstance } from "./dom";
-import { cleanupUnusedHooks } from "./hooks";
 import { render } from "./render";
 
 /**
@@ -11,15 +10,26 @@ import { render } from "./render";
  * @param container - VNode가 렌더링될 DOM 컨테이너
  */
 export const setup = (rootNode: VNode | null, container: HTMLElement): void => {
-  // 여기를 구현하세요.
-  // 1. 컨테이너 유효성을 검사합니다.
-  // 2. 이전 렌더링 내용을 정리하고 컨테이너를 비웁니다.
-  // 3. 루트 컨텍스트와 훅 컨텍스트를 리셋합니다.
-  // 4. 첫 렌더링을 실행합니다.
-
-  console.log(context, removeInstance, cleanupUnusedHooks, render);
-
+  // 1. 컨테이너 유효성 검사
   if (!(container instanceof HTMLElement)) {
     throw new Error("유효한 HTML 요소가 아닙니다.");
   }
+
+  // 2. null 노드 검사
+  if (rootNode === null) {
+    throw new Error("렌더링할 루트 노드가 필요합니다.");
+  }
+
+  // 3. 이전 렌더링 내용 정리
+  if (context.root.instance) {
+    removeInstance(container, context.root.instance);
+  }
+  container.innerHTML = "";
+
+  // 4. 컨텍스트 리셋
+  context.root.reset({ container, node: rootNode });
+  context.hooks.clear();
+
+  // 5. 첫 렌더링 실행
+  render();
 };
